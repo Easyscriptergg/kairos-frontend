@@ -1,0 +1,109 @@
+/* ============================================================
+   PERFORM PAGE STYLES
+   ============================================================ */
+
+.e1rm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--card-gap);
+}
+
+.e1rm-card {
+  gap: var(--space-2);
+}
+
+.e1rm-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.e1rm-name {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.e1rm-trend {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.e1rm-trend.up { color: var(--color-success); }
+.e1rm-trend.down { color: var(--color-danger); }
+
+.e1rm-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.e1rm-val {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.03em;
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.e1rm-unit {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.e1rm-sub {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.pr-card {
+  flex-direction: row;
+  align-items: center;
+}
+
+.pr-badge {
+  color: var(--accent-primary);
+}
+
+.pr-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pr-exercise {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.pr-date {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.pr-values {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pr-current {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pr-delta {
+  font-size: var(--font-size-xs);
+  color: var(--color-success);
+}

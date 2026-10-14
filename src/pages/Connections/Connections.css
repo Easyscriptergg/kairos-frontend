@@ -1,0 +1,50 @@
+/* ============================================================
+   CONNECTIONS PAGE STYLES
+   ============================================================ */
+
+.connections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--card-gap);
+}
+
+.conn-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.conn-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.conn-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.conn-streams {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.streams-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.streams-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.conn-card .btn {
+  align-self: flex-start;
+}

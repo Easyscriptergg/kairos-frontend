@@ -1,0 +1,8 @@
+/* ============================================================
+   INSIGHTS PAGE STYLES
+   Built entirely from shared components.
+   ============================================================ */
+
+.insights-page .insight-card {
+  max-width: 920px;
+}

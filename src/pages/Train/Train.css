@@ -1,0 +1,200 @@
+/* ============================================================
+   TRAIN PAGE STYLES
+   ============================================================ */
+
+/* Workout list */
+.workout-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.workout-title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.workout-name {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+}
+
+.workout-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin-top: 2px;
+}
+
+.workout-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.workout-stats-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.workout-exercises-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.workout-ex-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.ex-chip-name {
+  color: var(--text-primary);
+}
+
+.ex-chip-sets {
+  color: var(--text-secondary);
+}
+
+.history-more {
+  align-self: center;
+}
+
+/* Exercise library */
+.library-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  background: var(--surface-control);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+}
+
+.search-bar:focus-within {
+  border-color: var(--accent-primary);
+}
+
+.search-bar input {
+  width: 100%;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+
+.search-bar input:focus-visible {
+  outline: none;
+}
+
+.exercises-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--card-gap);
+}
+
+.exercise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.exercise-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.exercise-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.detail-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.detail-row dt {
+  color: var(--text-tertiary);
+  width: 78px;
+  flex-shrink: 0;
+}
+
+/* Session logger */
+.logger-card {
+  gap: var(--space-5);
+}
+
+.set-logger-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.box-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.set-inputs-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.logged-sets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.logged-sets-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.logger-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 860px) {
+  .set-inputs-row {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .set-inputs-row > :first-child,
+  .set-inputs-row > .btn {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,37 @@
+/* ============================================================
+   SETTINGS PAGE STYLES
+   ============================================================ */
+
+.settings-page .card {
+  max-width: 860px;
+}
+
+.settings-page .segmented {
+  align-self: flex-start;
+}
+
+.setting-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.setting-hint strong {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.setting-note {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.setting-note code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.danger-zone {
+  border-color: rgba(240, 118, 107, 0.25);
+}

@@ -1,0 +1,132 @@
+/* ============================================================
+   CALENDAR PAGE STYLES
+   ============================================================ */
+
+.calendar-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.calendar-day {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.day-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: var(--space-3);
+}
+
+.day-relative {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.day-full {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.day-events {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.event-card {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-lg);
+}
+
+.event-marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.marker-training { color: var(--accent-primary); }
+.marker-recovery { color: var(--accent-secondary); }
+.marker-nutrition { color: var(--series-sage); }
+
+.event-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.event-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.event-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.event-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.event-value {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.event-clock {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.calendar-more {
+  align-self: center;
+}
+
+@media (max-width: 640px) {
+  .calendar-day {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .day-heading {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding-top: 0;
+  }
+
+  .event-card {
+    flex-wrap: wrap;
+  }
+
+  .event-aside {
+    flex-direction: row;
+    gap: var(--space-2);
+    width: 100%;
+    padding-left: calc(36px + var(--space-3));
+  }
+}

@@ -1,0 +1,263 @@
+/* ============================================================
+   KAIROS CHARTS
+   ============================================================ */
+
+.kc-chart {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+
+.kc-chart .recharts-surface {
+  overflow: visible;
+}
+
+.kc-empty {
+  width: 100%;
+  height: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  border: 1px dashed var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+}
+
+/* --- Tooltip --- */
+.kc-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: rgba(20, 21, 18, 0.96);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-md);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.kc-tooltip-title {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.kc-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kc-tooltip-row i,
+.kc-legend i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kc-tooltip-row b {
+  margin-left: auto;
+  padding-left: var(--space-3);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.kc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.kc-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* --- Activity matrix --- */
+.kc-matrix {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--space-2);
+  row-gap: 7px;
+  width: 100%;
+}
+
+.kc-matrix-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.kc-matrix-track {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.kc-matrix-cell {
+  height: 14px;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.kc-matrix-cell i {
+  height: 100%;
+  border-radius: 4px;
+  background: rgba(255, 107, 53, 0.26);
+}
+
+.kc-matrix-cell i.met {
+  background: var(--accent-primary);
+}
+
+.kc-axis span {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-tertiary);
+}
+
+/* --- Deviation bars --- */
+.kc-deviation {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  width: 100%;
+  height: 100%;
+}
+
+.kc-deviation-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc((100% - 18px) / 2);
+  border-top: 1px dashed rgba(255, 255, 255, 0.16);
+}
+
+.kc-deviation-col {
+  flex: 1;
+  max-width: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.kc-deviation-track {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.kc-deviation-pill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 4px;
+  background: var(--series-amber);
+}
+
+.kc-deviation-pill.highlight {
+  background: var(--accent-primary);
+}
+
+.kc-deviation-label {
+  font-size: 10px;
+  line-height: 12px;
+  color: var(--text-tertiary);
+}
+
+.kc-deviation-label.active {
+  color: var(--text-primary);
+}
+
+/* --- Session waveform --- */
+.kc-waveform {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+.kc-waveform span {
+  flex: 1;
+  min-width: 1px;
+  max-width: 3px;
+  border-radius: 1px;
+  background: rgba(244, 244, 239, 0.26);
+}
+
+.kc-waveform span.latest {
+  background: var(--accent-primary);
+}
+
+/* --- Athlete gauge --- */
+.kc-gauge {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.kc-gauge-tick {
+  stroke: rgba(244, 244, 239, 0.2);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.kc-gauge-tick.active {
+  stroke: rgba(244, 244, 239, 0.94);
+}
+
+.kc-gauge-marker {
+  stroke: var(--accent-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.kc-gauge-pointer {
+  fill: var(--accent-primary);
+}
+
+.kc-gauge-value {
+  fill: var(--text-primary);
+  font-size: 48px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kc-gauge-max {
+  fill: var(--text-secondary);
+  font-size: 13px;
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+}
+
+.kc-gauge-caption {
+  fill: var(--text-secondary);
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+}
+
+.kc-gauge-scale {
+  fill: var(--text-tertiary);
+  font-size: 9px;
+}

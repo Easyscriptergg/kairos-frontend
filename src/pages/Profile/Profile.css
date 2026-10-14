@@ -1,0 +1,102 @@
+/* ============================================================
+   PROFILE PAGE STYLES
+   ============================================================ */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: var(--card-gap);
+}
+
+.profile-grid .full-span {
+  grid-column: 1 / -1;
+}
+
+.profile-id-card {
+  align-items: center;
+  text-align: center;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  background: linear-gradient(150deg, #6a6c62 0%, #2b2d27 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.profile-name {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-tight);
+  margin-bottom: var(--space-2);
+}
+
+.profile-badges {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.profile-goal-box {
+  width: 100%;
+}
+
+.goal-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--accent-primary);
+}
+
+.goal-text {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.biometrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.bio-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+}
+
+.bio-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.bio-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.bio-value.unset {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-tertiary);
+}
+
+.equipment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
