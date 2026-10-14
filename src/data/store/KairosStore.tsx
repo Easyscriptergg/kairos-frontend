@@ -9,6 +9,9 @@ import {
 } from '../domain/records';
 import { providerCatalog } from '../providers';
 import { createRepository, isApiConfigured } from '../api/repository';
+import { setUnauthorizedHandler } from '../api/apiClient';
+import { getSession } from '../api/session';
+import * as accounts from '../api/auth';
 
 // ============================================================
 // KAIROS DATA STORE
@@ -20,15 +23,18 @@ import { createRepository, isApiConfigured } from '../api/repository';
 // is stored.
 // ============================================================
 
-type LoadStatus = 'loading' | 'ready' | 'error';
+/** 'signed-out' only occurs for the API source, before sign-in or after the session expires. */
+type LoadStatus = 'loading' | 'ready' | 'error' | 'signed-out';
 
 interface KairosState extends AthleteRecords, DerivedState {
   mode: DataMode;
   status: LoadStatus;
-  /** Why loading failed, when status is 'error' */
+  /** Why loading failed (status 'error'), or why the athlete was signed out */
   error: string | null;
   /** Why the most recent save failed; cleared on the next successful save */
   saveError: string | null;
+  /** The signed-in Kairos account, for the API source */
+  account: { email: string } | null;
   settings: AppSettings;
   connections: Connection[];
   isLoading: boolean;
@@ -38,6 +44,8 @@ type KairosAction =
   | { type: 'LOAD_START'; mode: DataMode }
   | { type: 'LOADED'; records: AthleteRecords }
   | { type: 'LOAD_FAILED'; error: string }
+  | { type: 'SIGNED_OUT'; mode: DataMode; reason: string | null }
+  | { type: 'SIGNED_IN'; email: string }
   | { type: 'RECORDS_CHANGED'; records: Partial<AthleteRecords> }
   | { type: 'SETTINGS_CHANGED'; settings: AppSettings }
   | { type: 'SAVE_FAILED'; error: string }
@@ -80,6 +88,7 @@ function initialState(): KairosState {
     ...DEFAULT_SETTINGS,
     ...readPreference<Partial<AppSettings>>(SETTINGS_KEY, {}, v => typeof v === 'object' && v !== null),
   };
+  const session = getSession();
   return {
     ...EMPTY_RECORDS,
     ...deriveAll(EMPTY_RECORDS, settings),
@@ -87,6 +96,7 @@ function initialState(): KairosState {
     status: 'loading',
     error: null,
     saveError: null,
+    account: session ? { email: session.email } : null,
     settings,
     connections: providerCatalog,
     isLoading: true,
@@ -115,6 +125,13 @@ function kairosReducer(state: KairosState, action: KairosAction): KairosState {
     case 'LOAD_FAILED':
       return { ...state, status: 'error', isLoading: false, error: action.error };
 
+    // Signing out drops the account's records from memory immediately
+    case 'SIGNED_OUT':
+      return { ...withRecords(state, EMPTY_RECORDS), mode: action.mode, status: 'signed-out', isLoading: false, error: action.reason, saveError: null, account: null };
+
+    case 'SIGNED_IN':
+      return { ...state, account: { email: action.email }, error: null };
+
     case 'RECORDS_CHANGED':
       return { ...withRecords(state, { ...recordsOf(state), ...action.records }), saveError: null };
 
@@ -138,6 +155,7 @@ export interface KairosActions {
   reload: () => void;
   /** Each log action resolves true once the record is stored, false if the save failed. */
   logWorkout: (input: WorkoutInput) => Promise<boolean>;
+  deleteWorkout: (id: string) => Promise<boolean>;
   logRecovery: (input: RecoveryInput) => Promise<boolean>;
   logMeal: (date: string, meal: MealInput) => Promise<boolean>;
   saveProfile: (profile: AthleteProfile) => Promise<boolean>;
@@ -145,6 +163,10 @@ export interface KairosActions {
   /** Deletes what the active source has stored in this browser (demo: only what was logged on top of the sample data). */
   clearStoredRecords: () => Promise<boolean>;
   dismissSaveError: () => void;
+  /** Resolve to an error message, or null on success */
+  signIn: (email: string, password: string) => Promise<string | null>;
+  register: (email: string, password: string) => Promise<string | null>;
+  signOut: () => void;
 }
 
 interface KairosContextType {
@@ -166,6 +188,10 @@ export function KairosProvider({ children }: { children: ReactNode }) {
   const load = useCallback((mode: DataMode) => {
     // A newer load supersedes any still in flight, so a slow response can never overwrite a later one
     loadRef.current?.abort();
+    if (mode === 'api' && !getSession()) {
+      dispatch({ type: 'SIGNED_OUT', mode, reason: null });
+      return;
+    }
     const controller = new AbortController();
     loadRef.current = controller;
     dispatch({ type: 'LOAD_START', mode });
@@ -175,14 +201,26 @@ export function KairosProvider({ children }: { children: ReactNode }) {
         if (!controller.signal.aborted) dispatch({ type: 'LOADED', records });
       },
       error => {
-        if (!controller.signal.aborted) dispatch({ type: 'LOAD_FAILED', error: messageOf(error) });
+        if (controller.signal.aborted) return;
+        // A 401 has already moved the app to the signed-out state
+        if (stateRef.current.status !== 'signed-out') dispatch({ type: 'LOAD_FAILED', error: messageOf(error) });
       },
     );
   }, []);
 
   useEffect(() => {
+    // Any request the API rejects for authentication signs the athlete out of the app too
+    setUnauthorizedHandler(() => {
+      if (stateRef.current.mode === 'api') {
+        loadRef.current?.abort();
+        dispatch({ type: 'SIGNED_OUT', mode: 'api', reason: 'Your session has expired. Sign in again to continue.' });
+      }
+    });
     load(stateRef.current.mode);
-    return () => loadRef.current?.abort();
+    return () => {
+      setUnauthorizedHandler(null);
+      loadRef.current?.abort();
+    };
   }, [load]);
 
   const actions = useMemo<KairosActions>(() => {
@@ -194,8 +232,20 @@ export function KairosProvider({ children }: { children: ReactNode }) {
         if (stateRef.current.mode === mode) dispatch({ type: 'RECORDS_CHANGED', records });
         return true;
       } catch (error) {
-        dispatch({ type: 'SAVE_FAILED', error: messageOf(error) });
+        if (stateRef.current.status !== 'signed-out') dispatch({ type: 'SAVE_FAILED', error: messageOf(error) });
         return false;
+      }
+    };
+
+    const authenticate = async (run: () => Promise<{ email: string }>): Promise<string | null> => {
+      try {
+        const session = await run();
+        dispatch({ type: 'SIGNED_IN', email: session.email });
+        writePreference(MODE_KEY, 'api');
+        load('api');
+        return null;
+      } catch (error) {
+        return messageOf(error);
       }
     };
 
@@ -209,6 +259,11 @@ export function KairosProvider({ children }: { children: ReactNode }) {
       logWorkout: input => save(async current => {
         const saved = await createRepository(current.mode).saveWorkout(buildWorkout(input));
         return { workouts: [...current.workouts, saved].sort(byDate) };
+      }),
+
+      deleteWorkout: id => save(async current => {
+        await createRepository(current.mode).deleteWorkout(id);
+        return { workouts: current.workouts.filter(w => w.id !== id) };
       }),
 
       logRecovery: input => save(async current => {
@@ -246,6 +301,14 @@ export function KairosProvider({ children }: { children: ReactNode }) {
       },
 
       dismissSaveError: () => dispatch({ type: 'SAVE_ERROR_DISMISSED' }),
+
+      signIn: (email, password) => authenticate(() => accounts.signIn(email, password)),
+      register: (email, password) => authenticate(() => accounts.register(email, password)),
+      signOut: () => {
+        accounts.signOut();
+        loadRef.current?.abort();
+        dispatch({ type: 'SIGNED_OUT', mode: 'api', reason: null });
+      },
     };
   }, [load]);
 
@@ -271,11 +334,11 @@ export const MODE_LABELS: Record<DataMode, { short: string; label: string; descr
   local: {
     short: 'Local',
     label: 'Saved on this device',
-    description: 'Your own records, stored in this browser only. They are not backed up or synced.',
+    description: 'Records stored in this browser only, without an account. They are not backed up or synced.',
   },
   api: {
-    short: 'API',
-    label: 'Kairos API',
-    description: 'Your records, stored by the backend this app is configured to use.',
+    short: 'Account',
+    label: 'Kairos account',
+    description: 'Your records, stored in your Kairos account on the server.',
   },
 };

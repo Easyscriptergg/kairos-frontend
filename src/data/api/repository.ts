@@ -16,7 +16,7 @@ import {
 //   demo  — the bundled sample athlete, plus anything logged while
 //           exploring it (kept apart from real data)
 //   local — the athlete's own records in this browser's storage
-//   api   — the REST backend at VITE_API_BASE_URL
+//   api   — the signed-in athlete's records in the Kairos API (PostgreSQL)
 // A save resolves only once the record is actually stored.
 // ============================================================
 
@@ -25,6 +25,7 @@ export interface KairosRepository {
   load(signal?: AbortSignal): Promise<AthleteRecords>;
   saveProfile(profile: AthleteProfile): Promise<AthleteProfile>;
   saveWorkout(workout: Workout): Promise<Workout>;
+  deleteWorkout(id: string): Promise<void>;
   /** Replaces any existing record for the same day */
   saveRecovery(entry: RecoveryEntry): Promise<RecoveryEntry>;
   /** Replaces any existing record for the same day */
@@ -115,6 +116,14 @@ function browserRepository(mode: 'demo' | 'local'): KairosRepository {
       update(s => ({ ...s, sessions: [...s.sessions.filter(x => x.id !== workout.id), toSessionDto(workout)] }));
       return workout;
     },
+    async deleteWorkout(id) {
+      if (!readStored(mode).sessions.some(s => s.id === id)) {
+        throw new StorageError(mode === 'demo'
+          ? 'Sample sessions are part of the demo and cannot be deleted. Only sessions you logged can be.'
+          : 'That session was not found on this device.');
+      }
+      update(s => ({ ...s, sessions: s.sessions.filter(x => x.id !== id) }));
+    },
     async saveRecovery(entry) {
       update(s => ({ ...s, recovery: upsertByDate(s.recovery, toRecoveryDto(entry)) }));
       return entry;
@@ -154,6 +163,9 @@ const apiRepository: KairosRepository = {
   saveProfile: profile => apiRequest(ENDPOINTS.profile, parseProfile, { method: 'PUT', body: profile }),
   async saveWorkout(workout) {
     return fromSessionDto(await apiRequest(ENDPOINTS.trainingSessions, parseSession, { method: 'POST', body: toSessionDto(workout) }));
+  },
+  async deleteWorkout(id) {
+    await apiRequest(ENDPOINTS.trainingSession(id), () => undefined, { method: 'DELETE' });
   },
   async saveRecovery(entry) {
     return fromRecoveryDto(await apiRequest(ENDPOINTS.recoveryRecord(entry.date), parseRecovery, { method: 'PUT', body: toRecoveryDto(entry) }));

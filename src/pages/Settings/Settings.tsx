@@ -5,7 +5,8 @@ import { DataMode, RecommendationSensitivity, UnitSystem } from '../../data/mode
 import { READY_THRESHOLDS } from '../../data/domain/derive';
 import { API_BASE_URL } from '../../data/api/apiClient';
 import { isApiConfigured } from '../../data/api/repository';
-import { RotateCcw, Trash2 } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { RotateCcw, Trash2, LogOut, LogIn, UserRound } from 'lucide-react';
 import './Settings.css';
 
 const MODES: DataMode[] = ['demo', 'local', 'api'];
@@ -65,6 +66,28 @@ export default function Settings() {
               : <>No Kairos API is configured. Set <code>VITE_API_BASE_URL</code> and rebuild to enable it — see <code>docs/API_CONTRACT.md</code>.</>}
           </p>
         </Card>
+
+        {/* Account */}
+        {mode === 'api' && (
+          <Card padding="lg">
+            <SectionHeader
+              title="Account"
+              subtitle={state.account ? 'Your records are stored in this Kairos account.' : 'You are signed out. Sign in to see and log your records.'}
+            />
+            {state.account ? (
+              <div className="form-actions">
+                <span className="tag"><UserRound size={13} /> {state.account.email}</span>
+                <button className="btn btn-secondary" onClick={actions.signOut}>
+                  <LogOut size={15} /> Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="form-actions">
+                <NavLink to="/" className="btn btn-primary"><LogIn size={15} /> Sign in or create an account</NavLink>
+              </div>
+            )}
+          </Card>
+        )}
 
         {/* Units */}
         <Card padding="lg">

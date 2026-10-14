@@ -1,137 +1,101 @@
 # Kairos frontend ↔ backend API contract
 
-**Status: proposed. No backend implements this yet, and nothing in the frontend has been verified against a real server.**
+**Status: implemented.** The backend is the Spring Boot service in the separate `kairos-backend` repository. Every endpoint below is covered by its integration tests against PostgreSQL, and the frontend has been exercised end-to-end against it locally. It is not deployed yet; see [DEPLOYMENT.md](DEPLOYMENT.md).
 
-This is the smallest REST surface the frontend needs to stop storing records in the browser. The frontend side is already written (`src/data/api/`); a backend that implements the endpoints below works with it by setting one environment variable.
-
-## What exists today
-
-| Piece | State |
+| Piece | Where |
 |---|---|
-| `backend/` (NestJS 11 + Prisma, PostgreSQL) | Scaffold only. Exposes `GET /` and `GET /health`. Every domain module (`training`, `recovery`, `nutrition`, `athletes`, `auth`, …) is an empty `@Module({})`. The Prisma schema defines the tables, but there are no migrations, controllers, services or `.env`. |
-| Spring Boot backend | Not found. The Spring Tools workspace holds `heavy-duty-backend`, `SchedulingExample-1`, `SecurityApp`, `StudentManagementApp` and `UserApplication-1`; none is a Kairos API. `heavy-duty-backend` has `Workout`/`Exercise`/`SetLog` entities but only a `/api/health` endpoint, an in-memory H2 database, and no athlete, recovery or nutrition model. |
-| Authentication | Not implemented anywhere. |
-| Frontend | Uses demo data or browser storage. Switches to this API when `VITE_API_BASE_URL` is set. |
-
-**Decision needed:** which backend is authoritative — finish the NestJS scaffold, or build the Spring Boot service. The contract below is the same either way.
+| Backend DTOs and validation | `kairos-backend/src/main/java/com/kairos/backend/**/*Dto.java` |
+| Frontend wire types and parsers | `src/data/api/contract.ts` |
+| Frontend client (base URL, token, errors) | `src/data/api/apiClient.ts`, `auth.ts`, `session.ts` |
+| Calculations (scores, loads, insights) | `src/data/domain/` (frontend only) |
 
 ## Conventions
 
-- Base URL: `VITE_API_BASE_URL`, e.g. `http://localhost:8080/api`. Paths below are appended to it.
-- JSON request and response bodies. Dates are local calendar days, `YYYY-MM-DD`. Timestamps are ISO 8601.
-- Weights are kilograms, durations minutes, sleep hours, hydration litres.
-- CORS must allow the frontend origin (`http://localhost:5173` in development).
-- Errors: any non-2xx status. The frontend shows the status and stops; it never substitutes sample data.
-- The server stores **observations only**. Recovery score, fatigue, training load, session intensity, day totals, estimated 1RMs, PRs, the athlete-state scores and insights are all calculated in the frontend (`src/data/domain/`) from these records, so they are not part of the contract.
+- **Base URL:** `VITE_API_BASE_URL` includes the `/api` prefix, e.g. `https://kairos-backend.onrender.com/api`. Paths below are appended to it.
+- **Format:** JSON request and response bodies.
+- **Dates:** the athlete's local calendar day, `YYYY-MM-DD`, stored without time-zone conversion. Timestamps are ISO 8601.
+- **Units:** kilograms, minutes, hours of sleep, litres of water. The unit preference only changes display.
+- **Authentication:** `Authorization: Bearer <token>` on every endpoint except health and the two auth endpoints. Tokens are HS256 JWTs, valid 12 hours, with no refresh token. A `401` signs the athlete out in the app.
+- **Errors:** RFC 7807 problem documents (`application/problem+json`) with `detail` and, for validation, an `errors` list of `{field, message}`. The app shows `detail` and never substitutes sample data for a failed request.
+- **Optional fields** are omitted rather than sent as `null`, except `hydrationLiters`, which is always present and `null` when not logged.
+- **Observations only:** the server stores observations. Recovery score, fatigue, training load, intensity, day totals, estimated 1RMs, PRs, the athlete-state scores and insights are calculated by the frontend from these records.
 
 ## Endpoints
 
-| Method | Path | Purpose | Success |
+| Method | Path | Success | Failure |
 |---|---|---|---|
-| GET | `/v1/profile` | The signed-in athlete's profile | `200` profile, or `404` if none yet |
-| PUT | `/v1/profile` | Create or replace the profile | `200` profile |
-| GET | `/v1/training-sessions` | All sessions | `200` session[] |
-| POST | `/v1/training-sessions` | Create a session (client supplies the `id`) | `200`/`201` session |
-| GET | `/v1/recovery-records` | All recovery records | `200` record[] |
-| PUT | `/v1/recovery-records/{date}` | Create or replace the record for a day | `200` record |
-| GET | `/v1/nutrition-days` | All nutrition days | `200` day[] |
-| PUT | `/v1/nutrition-days/{date}` | Create or replace a day, including its meals | `200` day |
+| GET | `/health` *(no `/api` prefix)* | `200 {"status":"UP","database":"UP"}` | `503` |
+| POST | `/v1/auth/register` `{email, password}` | `201 {token, expiresAt, user:{id,email}}` | `400` invalid, `409` email taken |
+| POST | `/v1/auth/login` `{email, password}` | `200` same shape | `401` (one message for any wrong combination) |
+| GET | `/v1/auth/me` | `200 {id, email}` | `401` |
+| GET | `/v1/profile` | `200` profile | `404` until saved |
+| PUT | `/v1/profile` | `200` profile | `400` |
+| GET | `/v1/training-sessions?from=&to=` | `200` session[] (oldest first) | `400` bad range |
+| POST | `/v1/training-sessions` | `201` created, or `200` with the stored session if the client `id` already exists | `400` (unknown exercise id, future date, validation) |
+| DELETE | `/v1/training-sessions/{id}` | `204` | `404` (missing or another athlete's) |
+| GET | `/v1/recovery-records?from=&to=` | `200` record[] | |
+| PUT | `/v1/recovery-records/{date}` | `200` (creates or replaces that day) | `400` (path/body date mismatch, ranges, provider not `manual`) |
+| DELETE | `/v1/recovery-records/{date}` | `204` | `404` |
+| GET | `/v1/nutrition-days?from=&to=` | `200` day[] | |
+| PUT | `/v1/nutrition-days/{date}` | `200` (replaces the whole day, meals included) | `400` |
+| DELETE | `/v1/nutrition-days/{date}` | `204` | `404` |
 
-Every write must return the stored record in the same shape. The frontend validates each response and rejects one that is missing a required field.
+Interactive documentation: `/swagger-ui.html` on the backend. OpenAPI JSON: `/v3/api-docs`.
 
-List endpoints return everything for now. Add `?from=YYYY-MM-DD&to=YYYY-MM-DD` once history is large; the frontend needs the last 30 days for the Overview and all sessions for PR history.
+### Which endpoints the frontend calls
+
+- **Sign-in screen:** `register`, `login`.
+- **Every page, on load:** `GET` profile (404 means "no profile yet"), sessions, recovery records and nutrition days.
+- **Training:** `POST` to log a session, `DELETE` to delete one.
+- **Recovery:** `PUT` to log a check-in.
+- **Nutrition:** `PUT` of the whole day to add a meal.
+- **Profile:** `PUT`.
+
+The recovery and nutrition `DELETE` endpoints exist but have no UI yet.
 
 ## Shapes
 
-The TypeScript definitions are the source of truth: `src/data/api/contract.ts`.
-
 ```jsonc
-// Profile
+// Profile (id and createdAt are set by the server)
 {
-  "id": "athlete-…",
-  "name": "string",
-  "sport": "strength | running | cycling | team-sport | combat | hybrid",
-  "discipline": "string",
-  "experience": "beginner | intermediate | advanced | elite",
-  "goal": "string",
-  "trainingFrequency": 4,               // sessions per week, the weekly target
-  "equipment": ["barbell"],
+  "id": "uuid", "name": "Alex", "sport": "strength | running | cycling | team-sport | combat | hybrid",
+  "discipline": "Powerlifting", "experience": "beginner | intermediate | advanced | elite",
+  "goal": "", "trainingFrequency": 4, "equipment": ["barbell"],
   "performanceLevel": "recreational | competitive | semi-pro | professional",
-  "bodyMetrics": { "height": 178, "weight": 82, "age": 27 },   // all optional
-  "createdAt": "YYYY-MM-DD",
-  "onboardingComplete": true
+  "bodyMetrics": { "height": 180, "weight": 90.5, "age": 29 },
+  "createdAt": "YYYY-MM-DD", "onboardingComplete": true
 }
 
-// Training session
+// Training session: sets belong to the exercise they were performed on
 {
-  "id": "workout-…",
-  "date": "YYYY-MM-DD",
-  "name": "string",
+  "id": "workout-…", "date": "YYYY-MM-DD", "name": "Upper Body A",
   "type": "strength | hypertrophy | power | endurance | deload | cardio | sport-specific",
   "durationMinutes": 60,
-  "exercises": [{
-    "id": "we-…",
-    "exerciseId": "bench-press",        // must match an id in src/data/exercises.ts
-    "sets": [{
-      "id": "set-…", "setNumber": 1, "weightKg": 100, "reps": 5,
-      "rpe": 8,                         // optional, 1–10
-      "restSeconds": 180,               // optional
-      "performedAt": "ISO timestamp"
-    }]
-  }]
+  "exercises": [{ "id": "we-…", "exerciseId": "bench-press",
+    "sets": [{ "id": "set-…", "setNumber": 1, "weightKg": 100, "reps": 5, "rpe": 8, "restSeconds": 180, "performedAt": "ISO" }] }]
 }
 
-// Recovery record (one per day)
+// Recovery record: one per day
 {
-  "id": "recovery-YYYY-MM-DD",
-  "date": "YYYY-MM-DD",
-  "sleepDurationHours": 7.5,
-  "sleepQuality": 80,                   // 0–100
-  "restingHeartRate": 58,
-  "hrvMs": 60,                          // optional
-  "soreness": 3,                        // 1–10
-  "mood": 7, "stress": 3,               // optional, 1–10
-  "source": { "provider": "manual", "recordedAt": "ISO timestamp" }
+  "id": "recovery-YYYY-MM-DD", "date": "YYYY-MM-DD", "sleepDurationHours": 7.5, "sleepQuality": 80,
+  "restingHeartRate": 58, "hrvMs": 60, "soreness": 3, "mood": 7, "stress": 3,
+  "source": { "provider": "manual", "recordedAt": "ISO" }
 }
 
-// Nutrition day (one per day)
+// Nutrition day: one per date
 {
-  "id": "nutrition-YYYY-MM-DD",
-  "date": "YYYY-MM-DD",
-  "hydrationLiters": 2.5,               // null when not logged
-  "meals": [{ "id": "meal-…", "name": "string", "time": "HH:MM", "calories": 520, "protein": 40, "carbohydrates": 60, "fat": 12 }],
+  "id": "nutrition-YYYY-MM-DD", "date": "YYYY-MM-DD", "hydrationLiters": null,
+  "meals": [{ "id": "meal-…", "name": "Oats", "time": "07:30", "calories": 520, "protein": 40, "carbohydrates": 60, "fat": 12 }],
   "targets": { "calories": 2600, "protein": 165, "carbohydrates": 320, "fat": 75, "hydration": 3.0 }
 }
 ```
 
-`source.provider` is how provenance is kept: `manual` for check-ins typed by the athlete, and the provider id (`garmin`, `whoop`, `apple-health`, `health-connect`, …) for imported measurements, each with its own `recordedAt`.
+`exerciseId` must be one of the 26 ids in `src/data/exercises.ts`. The backend's migration `V2__exercise_catalog.sql` was generated from that file, so the two lists must change together.
 
-## Mapping to the existing Prisma schema
+## Not built yet
 
-The NestJS schema already has matching tables, so no new tables are needed if that backend is chosen:
-
-| Contract | Prisma model(s) |
-|---|---|
-| Profile | `AthleteProfile` (+ `User`) |
-| Training session, exercises, sets | `TrainingSession`, `TrainingExercise`, `TrainingSet` |
-| Recovery record | `RecoveryRecord`, `SleepRecord`, `HeartRateRecord`, `HRVRecord` |
-| Nutrition day and meals | `NutritionDay`, `Meal` |
-| `source` | `DataSource` |
-
-## Not covered yet
-
-- **Authentication.** The frontend sends no credentials. When auth is added (the NestJS scaffold already depends on JWT and Passport), the client needs a token attached in `src/data/api/apiClient.ts` and a sign-in screen. Tokens must not be stored in `VITE_` variables.
-- **Wearable connections.** Needs OAuth and ingestion on the backend (`IntegrationConnection`, `RawDataEvent`, `SyncJob` in the Prisma schema). The Connections page lists providers as not connected until this exists.
-- **Editing and deleting records.** The frontend only creates records and replaces a day's recovery or nutrition. `PATCH`/`DELETE` endpoints are not needed yet.
-- **Nutrition targets.** Each day carries its targets; there is no endpoint or screen for changing them.
-- **The assistant** ("Ask Kairos") has no endpoint and no model behind it.
-
-## Trying it
-
-```bash
-# .env.local
-VITE_API_BASE_URL=http://localhost:8080/api
-npm run dev
-```
-
-The app starts in "Kairos API" mode. If the server is unreachable or answers with an unexpected shape, every page shows a load error with a retry button; Settings stays reachable so the data source can be switched back.
+- **Refresh tokens, password reset, email verification and rate limiting** on sign-in.
+- **Wearable connections:** OAuth and data ingestion per provider. Each needs developer approval and, for Apple Health, a companion iOS app. Until then the API accepts only `manual` recovery records.
+- **AI assistant:** no endpoint and no model. Insights are deterministic comparisons in `src/data/domain/derive.ts`.
+- **Calendar scheduling:** the Calendar page lists logged records; there is no planned-session model.
+- **Editing nutrition targets**, logging hydration, and editing or deleting recovery and nutrition records from the UI.

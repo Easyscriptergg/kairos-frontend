@@ -1,0 +1,99 @@
+/* ============================================================
+   SIGN-IN SCREEN
+   A single glass panel, in the Overview's visual language.
+   ============================================================ */
+
+.signin {
+  display: flex;
+  justify-content: center;
+  padding-block: clamp(var(--space-6), 10vh, 120px) var(--space-10);
+}
+
+.signin-card {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--panel-highlight), var(--panel-shadow);
+  backdrop-filter: var(--panel-blur);
+  -webkit-backdrop-filter: var(--panel-blur);
+}
+
+.signin-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.signin-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-snug);
+}
+
+.signin-sub {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.signin-tabs {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.signin-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--accent-primary-subtle);
+  border: 1px solid var(--border-accent);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.signin-notice svg {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.signin-submit {
+  width: 100%;
+  margin-top: var(--space-1);
+}
+
+.signin-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+.signin-divider::before,
+.signin-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--border-primary);
+}
+
+.signin-foot {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .signin-card {
+    padding: var(--space-6) var(--space-4);
+  }
+}

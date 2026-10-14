@@ -14,14 +14,15 @@ import { ApiError } from './apiClient';
 // and are recalculated every time a record is read, so a change to
 // a formula applies to all history at once.
 //
-// This is the shape the frontend expects from a backend (see
-// docs/API_CONTRACT.md). No backend implements it yet; browser
-// storage uses the same shape so records can be migrated as-is.
+// These shapes match the kairos-backend (Spring Boot) DTOs; see
+// docs/API_CONTRACT.md. Browser storage uses the same shapes so
+// records could be migrated as-is.
 // ============================================================
 
 export const ENDPOINTS = {
   profile: '/v1/profile',
   trainingSessions: '/v1/training-sessions',
+  trainingSession: (id: string) => `/v1/training-sessions/${encodeURIComponent(id)}`,
   recoveryRecords: '/v1/recovery-records',
   recoveryRecord: (date: string) => `/v1/recovery-records/${date}`,
   nutritionDays: '/v1/nutrition-days',

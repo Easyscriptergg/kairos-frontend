@@ -11,7 +11,7 @@ import { relativeDay, todayKey, windowKeys } from '../../data/domain/dates';
 import { setsVolume, trainingLoadFromVolume } from '../../data/domain/scoring';
 import { formatWeight, toKilograms, weightUnit } from '../../data/domain/units';
 import {
-  Dumbbell, Flame, Clock, Plus, Check, Search, Calendar, Target, X,
+  Dumbbell, Flame, Clock, Plus, Check, Search, Calendar, Target, X, Trash2,
 } from 'lucide-react';
 import './Train.css';
 
@@ -32,6 +32,15 @@ export default function Train() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<string>('all');
   const [visibleSessions, setVisibleSessions] = useState(HISTORY_PAGE_SIZE);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    await actions.deleteWorkout(id);
+    setDeletingId(null);
+    setConfirmDeleteId(null);
+  };
 
   // Logger state for a new session
   const [workoutTitle, setWorkoutTitle] = useState('');
@@ -189,6 +198,20 @@ export default function Train() {
                           status={`${workout.intensity.replace('-', ' ')} intensity`}
                           variant={workout.intensity === 'very-high' ? 'danger' : workout.intensity === 'high' ? 'warning' : 'neutral'}
                         />
+                      )}
+                      {!workout.id.startsWith('demo-') && (
+                        confirmDeleteId === workout.id ? (
+                          <>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(workout.id)} disabled={deletingId === workout.id}>
+                              {deletingId === workout.id ? 'Deleting…' : 'Delete session'}
+                            </button>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDeleteId(null)}>Keep</button>
+                          </>
+                        ) : (
+                          <button className="icon-btn" onClick={() => setConfirmDeleteId(workout.id)} aria-label={`Delete ${workout.name}`} title="Delete session">
+                            <Trash2 size={15} />
+                          </button>
+                        )
                       )}
                     </div>
                   </div>

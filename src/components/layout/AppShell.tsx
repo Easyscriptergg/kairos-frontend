@@ -7,6 +7,7 @@ import {
   Zap, Menu, X, AlertTriangle, RefreshCw,
 } from 'lucide-react';
 import heroAthlete from '../../assets/kairos-hero-athlete.jpg';
+import SignInScreen from '../auth/SignInScreen';
 import './AppShell.css';
 
 const mainNavItems = [
@@ -40,6 +41,7 @@ export default function AppShell() {
   const modeLabel = MODE_LABELS[state.mode];
   // Settings stays reachable when loading fails, so the data source can always be changed
   const showLoadError = state.status === 'error' && location.pathname !== '/settings';
+  const showSignIn = state.status === 'signed-out' && location.pathname !== '/settings';
   // The overview is the only route laid out over the full-bleed hero photograph
   const immersive = location.pathname === '/';
 
@@ -164,6 +166,8 @@ export default function AppShell() {
               <RefreshCw size={22} className="shell-spinner" />
               <p>Loading athlete data…</p>
             </div>
+          ) : showSignIn ? (
+            <SignInScreen />
           ) : showLoadError ? (
             <div className="shell-state" role="alert">
               <AlertTriangle size={28} className="text-danger" />
